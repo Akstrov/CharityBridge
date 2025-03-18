@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-vue-next';
 import { ref } from 'vue';
-import { parseDate, today, type DateValue } from '@internationalized/date';
+import { today, type DateValue } from '@internationalized/date';
 import { Link } from '@inertiajs/vue3';
 
 const props = defineProps<{

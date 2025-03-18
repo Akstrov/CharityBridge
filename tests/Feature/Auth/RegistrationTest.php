@@ -14,8 +14,11 @@ test('new users can register', function () {
         'email' => 'test@example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
+        'role' => 'donor',
+        'phone' => '1234567890',
+        'address' => '123 Test St, Test City, TS 12345',
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $response->assertRedirect(route('donor.dashboard', absolute: false));
 });

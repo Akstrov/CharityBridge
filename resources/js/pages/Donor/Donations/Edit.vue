@@ -12,7 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover/index';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { parseDate, today, type DateValue } from '@internationalized/date';
 
 interface Donation {
@@ -28,31 +28,20 @@ interface Donation {
     status: string;
 }
 
-type FormData = Record<string, any> & {
-    title: string;
-    description: string;
-    location: string;
-    is_urgent: boolean;
-    expiry_date: string | null;
-    category: string;
-    quantity: number | null;
-    monetary_value: number | null;
-    status: string;
-};
 
 const props = defineProps<{
     donation: Donation;
 }>();
 
-const form = useForm<FormData>({
+const form = useForm({
     title: props.donation.title,
     description: props.donation.description,
-    location: props.donation.location,
-    is_urgent: props.donation.is_urgent,
-    expiry_date: props.donation.expiry_date,
     category: props.donation.category,
     quantity: props.donation.quantity,
+    location: props.donation.location,
+    is_urgent: props.donation.is_urgent,
     monetary_value: props.donation.monetary_value,
+    expiry_date: props.donation.expiry_date,
     status: props.donation.status,
 });
 
@@ -74,14 +63,6 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: route('donations.edit', { donation: props.donation.id }),
     }
 ];
-
-const displayQuantity = computed(() => {
-    return props.donation.quantity !== null ? props.donation.quantity.toString() : 'N/A';
-});
-
-const displayMonetaryValue = computed(() => {
-    return props.donation.monetary_value !== null ? `$${props.donation.monetary_value.toFixed(2)}` : 'N/A';
-});
 
 const handleSubmit = () => {
     form.expiry_date = selectedDate.value ? new Date(selectedDate.value.toString()).toISOString() : null;

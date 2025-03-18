@@ -11,7 +11,6 @@ import {
     Gift, 
     Heart, 
     Settings, 
-    HelpCircle,
     BookOpen,
     Github
 } from 'lucide-vue-next';

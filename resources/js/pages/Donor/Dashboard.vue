@@ -116,7 +116,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Gift, CheckCircle, Clock, Package, Plus, Settings, User, List } from 'lucide-vue-next';
+import { Gift, CheckCircle, Clock, Package } from 'lucide-vue-next';
 import { Link } from '@inertiajs/vue3';
 
 interface Donation {
@@ -134,7 +134,7 @@ interface Stats {
     completedDonations: number;
 }
 
-const props = defineProps<{
+defineProps<{
     stats: Stats;
     recentDonations: Donation[];
 }>();

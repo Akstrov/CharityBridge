@@ -4,9 +4,9 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Package, MapPin, Clock, AlertCircle, User, Calendar } from 'lucide-vue-next';
+import { Package, MapPin, Clock, User, Calendar } from 'lucide-vue-next';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import { type BreadcrumbItem } from '@/types';
 
 interface Donation {
@@ -41,8 +41,6 @@ const props = defineProps<{
     userRole: string;
 }>();
 
-const showClaimDialog = ref(false);
-
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
@@ -71,9 +69,7 @@ const formatCurrency = (value: number | null): string => {
 };
 
 const canClaim = computed(() => {
-    return props.userRole === 'charity' && 
-           props.donation.status === 'available' && 
-           !props.donation.claims.some(claim => claim.status === 'pending');
+    return props.userRole === 'charity' && props.donation.status === 'available';
 });
 
 const handleClaim = () => {
