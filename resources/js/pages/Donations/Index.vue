@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Package, MapPin, Clock, AlertCircle, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-vue-next';
+import { Search, Package, MapPin, Clock, AlertCircle, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Plus, Eye } from 'lucide-vue-next';
 import { type BreadcrumbItem } from '@/types';
 
 interface Donation {
@@ -42,10 +42,27 @@ const props = defineProps<{
 const search = ref(props.filters.search);
 const category = ref(props.filters.category);
 
+const userRole = computed(() => props.userRole);
+
+// Get the dashboard route based on user role
+const dashboardRoute = computed(() => {
+    const role = userRole.value;
+    switch (role) {
+        case 'donor':
+            return route('donor.dashboard');
+        case 'charity':
+            return route('charity.dashboard');
+        case 'admin':
+            return route('admin.dashboard');
+        default:
+            return route('donor.dashboard');
+    }
+});
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: route('donor.dashboard'),
+        href: dashboardRoute.value,
     },
     {
         title: 'Available Donations',
@@ -114,17 +131,17 @@ const isCurrentPage = (page: number | string): boolean => {
 </script>
 
 <template>
+    <Head title="Available Donations" />
+
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Head title="Available Donations" />
-        
         <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
             <Card>
                 <CardHeader class="flex flex-row items-center justify-between">
                     <CardTitle>Available Donations</CardTitle>
-                    <Link v-if="userRole === 'donor'" :href="route('donations.create', { from: 'available-donations' })">
+                    <Link v-if="userRole === 'donor'" :href="route('donor.donations.create', { from: 'available-donations' })">
                         <Button>
-                            <Package class="mr-2 h-4 w-4" />
-                            Create New Donation
+                            <Plus class="mr-2 h-4 w-4" />
+                            Create Donation
                         </Button>
                     </Link>
                 </CardHeader>

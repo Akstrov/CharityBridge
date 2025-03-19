@@ -16,6 +16,7 @@ import { CalendarIcon } from 'lucide-vue-next';
 import { ref } from 'vue';
 import { today, type DateValue } from '@internationalized/date';
 import { Link } from '@inertiajs/vue3';
+import { toast } from '@/components/ui/use-toast';
 
 const props = defineProps<{
     from?: 'my-donations' | 'available-donations';
@@ -28,11 +29,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: props.from === 'my-donations' ? 'My Donations' : 'Available Donations',
-        href: props.from === 'my-donations' ? route('donations.my') : route('donations.index'),
+        href: props.from === 'my-donations' ? route('donor.my-donations') : route('donations.index'),
     },
     {
         title: 'Create Donation',
-        href: route('donations.create'),
+        href: route('donor.donations.create'),
     }
 ];
 
@@ -51,9 +52,12 @@ const form = useForm({
 
 const handleSubmit = () => {
     form.expiry_date = selectedDate.value ? new Date(selectedDate.value.toString()).toISOString() : null;
-    form.post(route('donations.store', { from: props.from }), {
+    form.post(route('donor.donations.store', { from: props.from }), {
         onSuccess: () => {
-            // Handle success
+            toast({
+                title: 'Success',
+                description: 'Donation created successfully.',
+            });
         },
     });
 };
@@ -198,10 +202,8 @@ const handleSubmit = () => {
 
                         <!-- Submit Button -->
                         <div class="flex justify-end gap-4">
-                            <Link :href="props.from === 'my-donations' ? route('donations.my') : route('donations.index')">
-                                <Button type="button" variant="outline">
-                                    Cancel
-                                </Button>
+                            <Link :href="props.from === 'my-donations' ? route('donor.my-donations') : route('donations.index')">
+                                <Button variant="outline">Cancel</Button>
                             </Link>
                             <Button
                                 type="submit"

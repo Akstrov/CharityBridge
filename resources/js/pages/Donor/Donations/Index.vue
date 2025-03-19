@@ -54,7 +54,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'My Donations',
-        href: route('donations.my'),
+        href: route('donor.my-donations'),
     }
 ];
 
@@ -83,7 +83,7 @@ const handleDelete = (donation: Donation) => {
 const confirmDelete = () => {
     if (!donationToDelete.value) return;
     
-    router.delete(route('donations.destroy', { donation: donationToDelete.value.id }), {
+    router.delete(route('donor.donations.destroy', { donation: donationToDelete.value.id }), {
         onSuccess: () => {
             donationToDelete.value = null;
         },
@@ -99,7 +99,7 @@ const confirmDelete = () => {
             <Card>
                 <CardHeader class="flex flex-row items-center justify-between">
                     <CardTitle>My Donations</CardTitle>
-                    <Link :href="route('donations.create', { from: 'my-donations' })">
+                    <Link :href="route('donor.donations.create', { from: 'my-donations' })">
                         <Button>
                             <Plus class="mr-2 h-4 w-4" />
                             Create New Donation
@@ -155,7 +155,7 @@ const confirmDelete = () => {
                                     <p class="text-sm text-muted-foreground">{{ donation.claims }} claims</p>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <Link :href="route('donations.edit', { donation: donation.id })">
+                                    <Link :href="route('donor.donations.edit', { donation: donation.id })">
                                         <Button variant="ghost" size="icon">
                                             <Edit class="h-4 w-4" />
                                         </Button>

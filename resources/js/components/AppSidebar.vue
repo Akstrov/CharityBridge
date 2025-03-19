@@ -6,11 +6,11 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { 
-    LayoutDashboard, 
-    Gift, 
-    Heart, 
-    Settings, 
+import {
+    LayoutDashboard,
+    Gift,
+    Heart,
+    Settings,
     BookOpen,
     Github
 } from 'lucide-vue-next';
@@ -20,8 +20,8 @@ interface User {
     role: 'donor' | 'charity' | 'admin';
 }
 
-const page = usePage<{ user: User }>();
-const userRole = computed(() => page.props.user?.role || 'donor');
+const page = usePage<{ auth: { user: User } }>();
+const userRole = computed(() => page.props.auth.user?.role || 'donor');
 
 // Get the dashboard route based on user role
 const dashboardRoute = computed(() => {
@@ -47,22 +47,42 @@ const donorNavItems: NavItem[] = [
     },
     {
         title: 'My Donations',
-        href: route('donations.my'),
+        href: route('donor.my-donations'),
         icon: Gift,
     },
     {
         title: 'Browse Donations',
         href: route('donations.index'),
         icon: Heart,
+    },
+    {
+        title: 'Notifications',
+        href: route('notifications.index'),
+        icon: BookOpen,
     }
 ];
 
-// Charity-specific navigation items (placeholder for now)
+// Charity-specific navigation items
 const charityNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: route('charity.dashboard'),
         icon: LayoutDashboard,
+    },
+    {
+        title: 'My Claims',
+        href: route('charity.claims.index'),
+        icon: Gift,
+    },
+    {
+        title: 'Browse Donations',
+        href: route('donations.index'),
+        icon: Heart,
+    },
+    {
+        title: 'Notifications',
+        href: route('notifications.index'),
+        icon: BookOpen,
     }
 ];
 

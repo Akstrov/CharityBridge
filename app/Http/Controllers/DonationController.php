@@ -17,6 +17,14 @@ class DonationController extends Controller
         $query = Donation::with('donor')
             ->where('status', 'available');
 
+        // If the user is a charity, exclude donations they have already claimed
+        if (Auth::user()->role === 'charity') {
+            $query->whereDoesntHave('claims', function ($q) {
+                $q->where('charity_id', Auth::id())
+                  ->whereIn('status', ['pending', 'approved']);
+            });
+        }
+
         // Apply search filter
         if ($request->has('search') && $request->search !== '') {
             $search = $request->search;
@@ -87,8 +95,8 @@ class DonationController extends Controller
                 ->with('success', 'Donation created successfully!');
         }
         
-        return redirect()->route('donations.my')
-            ->with('success', 'Donation created successfully!');
+        return redirect()->route('donor.my-donations')
+            ->with('success', 'Donation created successfully.');
     }
 
     /**
@@ -141,8 +149,8 @@ class DonationController extends Controller
 
         $donation->update($validated);
 
-        return redirect()->route('donations.my')
-            ->with('success', 'Donation updated successfully!');
+        return redirect()->route('donor.my-donations')
+            ->with('success', 'Donation updated successfully.');
     }
 
     /**
@@ -163,8 +171,8 @@ class DonationController extends Controller
 
         $donation->delete();
 
-        return redirect()->route('donations.my')
-            ->with('success', 'Donation deleted successfully!');
+        return redirect()->route('donor.my-donations')
+            ->with('success', 'Donation deleted successfully.');
     }
 
     /**

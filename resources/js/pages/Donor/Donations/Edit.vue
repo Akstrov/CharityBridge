@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-vue-next';
 import { ref } from 'vue';
 import { parseDate, today, type DateValue } from '@internationalized/date';
+import { Link } from '@inertiajs/vue3';
 
 interface Donation {
     id: number;
@@ -56,19 +57,22 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'My Donations',
-        href: route('donations.my'),
+        href: route('donor.my-donations'),
     },
     {
         title: 'Edit Donation',
-        href: route('donations.edit', { donation: props.donation.id }),
+        href: route('donor.donations.edit', { donation: props.donation.id }),
     }
 ];
 
 const handleSubmit = () => {
     form.expiry_date = selectedDate.value ? new Date(selectedDate.value.toString()).toISOString() : null;
-    form.put(route('donations.update', { donation: props.donation.id }), {
+    form.put(route('donor.donations.update', { donation: props.donation.id }), {
         onSuccess: () => {
-            // Handle success
+            toast({
+                title: 'Success',
+                description: 'Donation updated successfully.',
+            });
         },
     });
 };
@@ -201,13 +205,9 @@ const handleSubmit = () => {
 
                         <!-- Submit Button -->
                         <div class="flex justify-end gap-4">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                :href="route('donations.my')"
-                            >
-                                Cancel
-                            </Button>
+                            <Link :href="route('donor.my-donations')">
+                                <Button variant="outline">Cancel</Button>
+                            </Link>
                             <Button
                                 type="submit"
                                 :disabled="form.processing"

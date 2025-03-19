@@ -50,7 +50,7 @@
             <Card>
                 <CardHeader class="flex flex-row items-center justify-between">
                     <CardTitle>Recent Claims</CardTitle>
-                    <Link href="/claims">
+                    <Link :href="route('charity.claims.index')">
                         <Button variant="outline">View All Claims</Button>
                     </Link>
                 </CardHeader>
@@ -123,42 +123,30 @@ import { Button } from '@/components/ui/button';
 import { HandCoins, CheckCircle, Clock, AlertCircle } from 'lucide-vue-next';
 import { Link } from '@inertiajs/vue3';
 
+interface Claim {
+    id: number;
+    title: string;
+    status: 'pending' | 'approved' | 'rejected';
+    date: string;
+    donor: string;
+}
+
+interface Stats {
+    submittedClaims: number;
+    approvedClaims: number;
+    pendingApproval: number;
+    availableDonations: number;
+}
+
+defineProps<{
+    stats: Stats;
+    recentClaims: Claim[];
+}>();
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Charity Dashboard',
         href: '/charity/dashboard',
-    },
-];
-
-// Mock data - replace with actual data from backend
-const stats = {
-    submittedClaims: 8,
-    approvedClaims: 3,
-    pendingApproval: 5,
-    availableDonations: 25,
-};
-
-const recentClaims = [
-    {
-        id: 1,
-        title: 'Food Donation',
-        status: 'pending',
-        date: '2024-03-18',
-        donor: 'John Doe',
-    },
-    {
-        id: 2,
-        title: 'Clothing Items',
-        status: 'approved',
-        date: '2024-03-17',
-        donor: 'Jane Smith',
-    },
-    {
-        id: 3,
-        title: 'Monetary Donation',
-        status: 'rejected',
-        date: '2024-03-16',
-        donor: 'Mike Johnson',
     },
 ];
 </script>

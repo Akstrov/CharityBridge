@@ -50,7 +50,7 @@
             <Card>
                 <CardHeader class="flex flex-row items-center justify-between">
                     <CardTitle>Recent Donations</CardTitle>
-                    <Link :href="route('donations.my')">
+                    <Link :href="route('donor.my-donations')">
                         <Button variant="outline">View All Donations</Button>
                     </Link>
                 </CardHeader>
@@ -80,10 +80,10 @@
                     </CardHeader>
                     <CardContent>
                         <div class="space-y-4">
-                            <Link :href="route('donations.create')">
+                            <Link :href="route('donor.donations.create')">
                                 <Button class="w-full">Create New Donation</Button>
                             </Link>
-                            <Link :href="route('donations.my')">
+                            <Link :href="route('donor.my-donations')">
                                 <Button variant="outline" class="w-full">Manage Donations</Button>
                             </Link>
                         </div>

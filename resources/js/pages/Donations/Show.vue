@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Package, MapPin, Clock, User, Calendar } from 'lucide-vue-next';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { type BreadcrumbItem } from '@/types';
+import { toast } from '@/components/ui/use-toast';
 
 interface Donation {
     id: number;
@@ -72,9 +73,19 @@ const canClaim = computed(() => {
     return props.userRole === 'charity' && props.donation.status === 'available';
 });
 
+const isDialogOpen = ref(false);
+
 const handleClaim = () => {
-    // TODO: Implement claim functionality
-    console.log('Claiming donation:', props.donation.id);
+    router.post(route('claims.store', props.donation.id), {}, {
+        onSuccess: () => {
+            // Close the dialog after successful submission
+            isDialogOpen.value = false;
+        },
+        onError: (errors) => {
+            // Handle any errors if needed
+            console.error('Failed to claim donation:', errors);
+        }
+    });
 };
 </script>
 
@@ -96,7 +107,7 @@ const handleClaim = () => {
                                 <Badge variant="secondary">{{ donation.status }}</Badge>
                             </div>
                         </div>
-                        <Dialog v-if="canClaim">
+                        <Dialog v-if="canClaim" v-model:open="isDialogOpen">
                             <DialogTrigger as-child>
                                 <Button>Claim Donation</Button>
                             </DialogTrigger>
@@ -108,7 +119,7 @@ const handleClaim = () => {
                                     </DialogDescription>
                                 </DialogHeader>
                                 <DialogFooter>
-                                    <Button variant="outline" @click="handleClaim">Cancel</Button>
+                                    <Button variant="outline" @click="isDialogOpen = false">Cancel</Button>
                                     <Button @click="handleClaim">Confirm Claim</Button>
                                 </DialogFooter>
                             </DialogContent>

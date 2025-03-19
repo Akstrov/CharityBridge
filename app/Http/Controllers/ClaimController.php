@@ -30,13 +30,14 @@ class ClaimController extends Controller
         }
 
         // Create a new claim
-        Claim::create([
+        $claim = Claim::create([
             'donation_id' => $donation->id,
             'charity_id' => Auth::id(),
             'status' => 'pending',
         ]);
 
-        return redirect()->back()->with('success', 'Claim request sent successfully!');
+        return redirect()->route('charity.claims.show', $claim->id)
+            ->with('success', 'Claim request sent successfully!');
     }
 
     /**

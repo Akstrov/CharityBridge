@@ -40,4 +40,12 @@ class Donation extends Model
     {
         return $this->hasMany(Claim::class);
     }
+
+    /**
+     * Get the category that owns the donation.
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }
