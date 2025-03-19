@@ -4,8 +4,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { ref, computed } from 'vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     Bell,
     CheckCheck,
@@ -20,509 +19,299 @@ import {
 } from 'lucide-vue-next';
 import { type BreadcrumbItem } from '@/types';
 
-// Add this to debug
-import { onMounted } from 'vue';
-
-interface Notification {
-    id: number;
-    title: string;
-    message: string;
-    type: 'info' | 'success' | 'warning' | 'error';
-    is_read: boolean;
-    created_at: string;
-    related_to?: {
-        type: string;
-        id: number;
-        title: string;
+interface MessageNotificationData {
+    message: {
+        sender_id: number;
+        content: string;
+        created_at: string;
     };
+    claim_id: number;
+    claim_title: string;
 }
 
-interface PaginatedResponse {
-    data: Notification[];
+interface LaravelNotification {
+    id: string;
+    type: string;
+    notifiable_type: string;
+    notifiable_id: number;
+    data: MessageNotificationData | any; // Allow for other notification types
+    read_at: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+interface PaginatedResponse<T> {
+    data: T[];
     current_page: number;
     last_page: number;
+    per_page: number;
+    total: number;
+    from: number;
+    to: number;
+    links: Array<{ url: string | null; label: string; active: boolean }>;
     prev_page_url: string | null;
     next_page_url: string | null;
-    per_page?: number;
-    total?: number;
 }
 
-// Define props with default values that don't reference local variables
-const props = defineProps({
-    notifications: {
-        type: Object as () => PaginatedResponse,
-        default: () => ({
-            data: [
-                {
-                    id: 1,
-                    title: 'New Donation Received',
-                    message: 'You have received a new donation of $100 for the "Children Education Fund".',
-                    type: 'success',
-                    is_read: false,
-                    created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-                    related_to: {
-                        type: 'donation',
-                        id: 123,
-                        title: 'Donation #123'
-                    }
-                },
-                {
-                    id: 2,
-                    title: 'Donation Claimed',
-                    message: 'Your donation of $50 has been claimed by "Save the Animals Foundation".',
-                    type: 'info',
-                    is_read: false,
-                    created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-                    related_to: {
-                        type: 'donation',
-                        id: 124,
-                        title: 'Donation #124'
-                    }
-                },
-                {
-                    id: 3,
-                    title: 'New Message',
-                    message: 'You have a new message regarding your donation from "Homeless Shelter".',
-                    type: 'info',
-                    is_read: true,
-                    created_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
-                    related_to: {
-                        type: 'claim',
-                        id: 45,
-                        title: 'Claim #45'
-                    }
-                },
-                {
-                    id: 4,
-                    title: 'Donation Expiring Soon',
-                    message: 'Your donation #125 will expire in 2 days. Consider extending it if it hasn\'t been claimed.',
-                    type: 'warning',
-                    is_read: false,
-                    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-                    related_to: {
-                        type: 'donation',
-                        id: 125,
-                        title: 'Donation #125'
-                    }
-                },
-                {
-                    id: 5,
-                    title: 'Payment Failed',
-                    message: 'We couldn\'t process your payment for donation #126. Please update your payment method.',
-                    type: 'error',
-                    is_read: false,
-                    created_at: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(), // 1.5 days ago
-                    related_to: {
-                        type: 'donation',
-                        id: 126,
-                        title: 'Donation #126'
-                    }
-                },
-                {
-                    id: 6,
-                    title: 'System Maintenance',
-                    message: 'CharityBridge will be undergoing maintenance on Saturday, June 15th from 2AM to 4AM UTC.',
-                    type: 'info',
-                    is_read: true,
-                    created_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 days ago
-                },
-                {
-                    id: 7,
-                    title: 'Donation Impact Report',
-                    message: 'Your donation to "Children Education Fund" has helped 5 children access educational resources this month.',
-                    type: 'success',
-                    is_read: true,
-                    created_at: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(), // 3 days ago
-                    related_to: {
-                        type: 'donation',
-                        id: 120,
-                        title: 'Donation #120'
-                    }
-                },
-                {
-                    id: 8,
-                    title: 'Account Security Alert',
-                    message: 'We noticed a login to your account from a new device. If this wasn\'t you, please secure your account immediately.',
-                    type: 'warning',
-                    is_read: true,
-                    created_at: new Date(Date.now() - 1000 * 60 * 60 * 96).toISOString(), // 4 days ago
-                }
-            ],
-            current_page: 1,
-            last_page: 2,
-            prev_page_url: null,
-            next_page_url: '/notifications?page=2',
-            per_page: 8,
-            total: 15
-        })
-    },
-    unreadCount: {
-        type: Number,
-        default: 4 // Match the number of unread notifications in our mock data
-    },
-    userRole: {
-        type: String,
-        default: 'donor'
-    },
+const props = defineProps<{
+    notifications: PaginatedResponse<LaravelNotification>;
+    unreadCount: number;
+    userRole: string;
     filters: {
-        type: Object,
-        default: () => ({
-            type: 'all',
-            status: 'all'
-        })
-    }
-});
-
-// Safely access filter values with defaults
-const notificationType = ref(props.filters?.type || 'all');
-const status = ref(props.filters?.status || 'all');
-const activeTab = ref('all');
-
-const userRole = computed(() => props.userRole);
-
-// Get the dashboard route based on user role
-const dashboardRoute = computed(() => {
-    const role = userRole.value;
-    switch (role) {
-        case 'donor':
-            return route('donor.dashboard');
-        case 'charity':
-            return route('charity.dashboard');
-        case 'admin':
-            return route('admin.dashboard');
-        default:
-            return route('donor.dashboard');
-    }
-});
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboardRoute.value,
-    },
-    {
-        title: 'Notifications',
-        href: route('notifications.index'),
-    }
-];
-
-// Add this computed property to ensure we always have data to display
-const displayNotifications = computed(() => {
-    // If props.notifications has valid data, use it
-    if (props.notifications?.data?.length > 0) {
-        return props.notifications;
-    }
-
-    // Otherwise, return our hardcoded mock data
-    return {
-        data: [
-            {
-                id: 1,
-                title: 'New Donation Received',
-                message: 'You have received a new donation of $100 for the "Children Education Fund".',
-                type: 'success',
-                is_read: false,
-                created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-                related_to: {
-                    type: 'donation',
-                    id: 123,
-                    title: 'Donation #123'
-                }
-            },
-            // Add a few more items for testing
-            {
-                id: 2,
-                title: 'System Maintenance',
-                message: 'CharityBridge will be undergoing maintenance on Saturday.',
-                type: 'info',
-                is_read: true,
-                created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString()
-            }
-        ],
-        current_page: 1,
-        last_page: 1,
-        prev_page_url: null,
-        next_page_url: null
+        type: string;
+        status: string;
     };
+}>();
+
+// Reactive state
+const activeTab = ref('all');
+const notificationType = ref(props.filters.type);
+const statusFilter = ref(props.filters.status);
+
+// Computed properties
+const dashboardRoute = computed(() => {
+    switch (props.userRole) {
+        case 'donor': return route('donor.dashboard');
+        case 'charity': return route('charity.dashboard');
+        case 'admin': return route('admin.dashboard');
+        default: return route('donor.dashboard');
+    }
 });
 
-// Add this for debugging
-onMounted(() => {
-    console.log('Component mounted');
-    console.log('Props notifications:', props.notifications);
-    console.log('Display notifications:', displayNotifications.value);
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [
+    { title: 'Dashboard', href: dashboardRoute.value },
+    { title: 'Notifications', href: route('notifications.index') }
+]);
+
+// Transform Laravel notifications to display format
+const displayNotifications = computed(() => {
+    return props.notifications.data.map(notification => {
+        const isMessageNotification = notification.type === 'App\\Notifications\\NewMessageNotification';
+
+        return {
+            id: notification.id,
+            type: isMessageNotification ? 'message' : notification.data.type || 'info',
+            isRead: notification.read_at !== null,
+            createdAt: notification.created_at,
+            data: isMessageNotification ? {
+                senderId: notification.data.message.sender_id,
+                content: notification.data.message.content,
+                claimId: notification.data.claim_id,
+                claimTitle: notification.data.claim_title,
+                link: notification.data.link
+            } : notification.data
+        };
+    });
 });
 
+// Methods
 const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-
-    if (diffInHours < 24) {
-        if (diffInHours === 0) {
-            const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-            return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
+    const options: Intl.DateTimeFormatOptions = {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    };
+    return date.toLocaleDateString('en-US', options);
+};
+const viewConversation = (notificationId: string, claimId: number) => {
+    router.post(route('notifications.read', notificationId), {}, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            router.visit(route('messages.index', { claim: claimId }));
         }
-        return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
-    } else if (diffInHours < 48) {
-        return 'Yesterday';
-    } else {
-        return date.toLocaleDateString();
-    }
+    });
 };
 
-// Mark notification as read
-const markAsRead = (id: number) => {
-    router.post(
-        route('notifications.read', { id }),
-        {},
-        {
-            preserveScroll: true,
-            onSuccess: () => {
-                // Update the notification in the list
-                const notification = props.notifications.data.find(n => n.id === id);
-                if (notification) {
-                    notification.is_read = true;
-                }
-            }
+const markAsRead = (id: string) => {
+    router.post(route('notifications.read', { id }), {}, {
+        preserveScroll: true,
+        onSuccess: () => {
+            const notification = props.notifications.data.find(n => n.id === id);
+            if (notification) notification.read_at = new Date().toISOString();
         }
-    );
+    });
 };
 
-// Mark all notifications as read
 const markAllAsRead = () => {
-    router.post(
-        route('notifications.read-all'),
-        {},
-        {
-            preserveScroll: true,
-            onSuccess: () => {
-                // Update all notifications in the list
-                props.notifications.data.forEach(notification => {
-                    notification.is_read = true;
-                });
-            }
+    router.post(route('notifications.read-all'), {}, {
+        preserveScroll: true,
+        onSuccess: () => {
+            props.notifications.data.forEach(n => n.read_at = new Date().toISOString());
         }
-    );
+    });
 };
 
-// Delete notification
-const deleteNotification = (id: number) => {
+const deleteNotification = (id: string) => {
     if (confirm('Are you sure you want to delete this notification?')) {
-        router.delete(
-            route('notifications.destroy', { id }),
-            {
-                preserveScroll: true
-            }
-        );
+        router.delete(route('notifications.destroy', { id }), { preserveScroll: true });
     }
 };
 
-// Get notification icon based on type
-const getNotificationIcon = (type: string) => {
-    switch (type) {
-        case 'info':
-            return Mail;
-        case 'success':
-            return CheckCheck;
-        case 'warning':
-        case 'error':
-            return AlertCircle;
-        default:
-            return Bell;
-    }
-};
+// Filtering
+const filteredNotifications = computed(() => {
+    return displayNotifications.value.filter(notification => {
+        const typeMatch = activeTab.value === 'all' ||
+            (activeTab.value === 'unread' ? !notification.isRead :
+                notification.type === activeTab.value);
+        return typeMatch;
+    });
+});
 
-// Get notification class based on type
-const getNotificationClass = (type: string) => {
-    switch (type) {
-        case 'info':
-            return 'text-blue-500';
-        case 'success':
-            return 'text-green-500';
-        case 'warning':
-            return 'text-amber-500';
-        case 'error':
-            return 'text-red-500';
-        default:
-            return 'text-foreground';
-    }
-};
-
-// Pagination helpers
-const getPageNumbers = computed(() => {
-    const current = props.notifications.current_page;
-    const last = props.notifications.last_page;
-    const delta = 2; // Number of pages to show before and after current page
-
+// Pagination
+const pageNumbers = computed(() => {
+    const { current_page, last_page } = props.notifications;
     const range = [];
-    const rangeWithDots = [];
-    let l;
+    const delta = 2;
 
-    for (let i = 1; i <= last; i++) {
-        if (
-            i === 1 || // First page
-            i === last || // Last page
-            (i >= current - delta && i <= current + delta) // Pages around current page
-        ) {
+    for (let i = 1; i <= last_page; i++) {
+        if (i === 1 || i === last_page || (i >= current_page - delta && i <= current_page + delta)) {
             range.push(i);
         }
     }
-
-    for (let i = 0; i < range.length; i++) {
-        if (l) {
-            if (range[i] - l === 2) {
-                rangeWithDots.push(l + 1);
-            } else if (range[i] - l !== 1) {
-                rangeWithDots.push('...');
-            }
-        }
-        rangeWithDots.push(range[i]);
-        l = range[i];
-    }
-
-    return rangeWithDots;
+    return range;
 });
-
-const isCurrentPage = (page: number | string): boolean => {
-    return page === props.notifications.current_page;
-};
-
-// Handle filter changes
-const handleFilterChange = () => {
-    const appliedType = activeTab.value === 'all' ? notificationType.value : activeTab.value;
-
-    router.get(
-        route('notifications.index'),
-        {
-            type: appliedType,
-            status: status.value,
-            page: 1, // Reset to first page when filters change
-        },
-        {
-            preserveState: true,
-            preserveScroll: true,
-        }
-    );
-};
-
-// Setup watchers for tab and status changes
-const onTabChange = (newTab: string) => {
-    activeTab.value = newTab;
-    handleFilterChange();
-};
-
-const onStatusChange = (newStatus: string) => {
-    status.value = newStatus;
-    handleFilterChange();
-};
 </script>
 
 <template>
 
     <Head title="Notifications" />
-
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+        <div class="flex flex-col gap-4 p-4">
             <Card>
                 <CardHeader class="flex flex-row items-center justify-between">
-                    <CardTitle>
-                        <div class="flex items-center">
-                            <Bell class="mr-2 h-5 w-5" />
-                            Notifications
-                            <span v-if="unreadCount > 0" class="ml-2 text-sm text-primary">
-                                ({{ unreadCount }} new)
-                            </span>
-                        </div>
+                    <CardTitle class="flex items-center gap-2">
+                        <Bell class="h-5 w-5" />
+                        Notifications
+                        <span v-if="unreadCount > 0" class="text-primary text-sm">
+                            ({{ unreadCount }} unread)
+                        </span>
                     </CardTitle>
                     <Button v-if="unreadCount > 0" variant="outline" @click="markAllAsRead">
                         <CheckCheck class="mr-2 h-4 w-4" />
-                        Mark all as read
+                        Mark all read
                     </Button>
                 </CardHeader>
+
                 <CardContent>
-                    <!-- Tabs and Filters -->
-                    <div class="mb-6">
-                        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                            <div class="flex items-start gap-4">
-                                <div class="mt-1">
-                                    <component class="h-5 w-5" />
-                                </div>
+                    <Tabs v-model="activeTab" class="mb-6">
+                        <TabsList class="grid w-full grid-cols-5">
+                            <TabsTrigger value="all">All</TabsTrigger>
+                            <TabsTrigger value="unread">Unread</TabsTrigger>
+                            <TabsTrigger value="info">Info</TabsTrigger>
+                            <TabsTrigger value="success">Success</TabsTrigger>
+                            <TabsTrigger value="warning">Alerts</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+
+                    <div v-if="filteredNotifications.length" class="space-y-4">
+                        <div v-for="notification in filteredNotifications" :key="notification.id"
+                            class="group relative rounded-lg border p-4 transition-all hover:shadow-md"
+                            :class="{ 'bg-muted/50': !notification.isRead }">
+
+                            <!-- Message Notification Template -->
+                            <div v-if="notification.type === 'message'" class="flex items-start gap-4">
+                                <Mail class="h-5 w-5 text-blue-500 mt-1" />
                                 <div class="flex-1">
                                     <div class="flex items-center justify-between mb-1">
-                                        <h3 class="font-medium">
+                                        <h3 :class="{ 'font-semibold': !notification.isRead }">
+                                            New Message in {{ notification.data.claimTitle }}
                                         </h3>
-                                        <div class="flex items-center gap-2">
-                                            <div class="flex items-center text-muted-foreground text-sm">
-                                                <Clock class="h-3 w-3 mr-1" />
-                                            </div>
+                                        <div class="flex items-center text-sm text-muted-foreground">
+                                            <Clock class="mr-1 h-3 w-3" />
+                                            {{ formatDate(notification.createdAt) }}
                                         </div>
                                     </div>
-
+                                    <p class="text-muted-foreground text-sm">
+                                        {{ notification.data.content }}
+                                    </p>
+                                    <Link :href="route('messages.index', notification.data.claimId)"
+                                        @click="viewConversation(notification.id, notification.data.claimId)"
+                                        class="text-primary hover:underline text-sm mt-2 inline-block">
+                                    View Conversation
+                                    </Link>
                                 </div>
+                            </div>
+
+                            <!-- Default Notification Template -->
+                            <div v-else class="flex items-start gap-4">
+                                <component :is="getNotificationIcon(notification.type)"
+                                    :class="getNotificationClass(notification.type)" class="h-5 w-5 mt-1" />
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <h3 :class="{ 'font-semibold': !notification.isRead }">
+                                            {{ notification.data.title }}
+                                        </h3>
+                                        <div class="flex items-center text-sm text-muted-foreground">
+                                            <Clock class="mr-1 h-3 w-3" />
+                                            {{ formatDate(notification.createdAt) }}
+                                        </div>
+                                    </div>
+                                    <p class="text-muted-foreground text-sm">{{ notification.data.message }}</p>
+                                    <Link v-if="notification.data.related_to"
+                                        :href="route(`${notification.data.related_to.type}s.show`, notification.data.related_to.id)"
+                                        class="text-primary hover:underline text-sm mt-2 inline-block">
+                                    View {{ notification.data.related_to.type }}
+                                    </Link>
+                                </div>
+                            </div>
+                            <div class="absolute right-4 top-4 flex gap-2 opacity-0 group-hover:opacity-100">
+                                <Button v-if="!notification.isRead" variant="outline" size="sm"
+                                    @click="markAsRead(notification.id)">
+                                    <CheckCheck class="h-4 w-4" />
+                                </Button>
+                                <Button variant="outline" size="sm" class="text-destructive"
+                                    @click="deleteNotification(notification.id)">
+                                    <Trash2 class="h-4 w-4" />
+                                </Button>
                             </div>
                         </div>
                     </div>
+
+                    <div v-else class="flex h-32 items-center justify-center text-muted-foreground">
+                        No notifications found
+                    </div>
                 </CardContent>
-                <!-- Action buttons -->
-                <div class="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                    <Button variant="outline" size="icon" class="h-7 w-7" @click="markAsRead(notification.id)"
-                        title="Mark as read">
-                        <CheckCheck class="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="icon" class="h-7 w-7 text-destructive hover:bg-destructive/10"
-                        @click="deleteNotification(notification.id)" title="Delete notification">
-                        <Trash2 class="h-4 w-4" />
-                    </Button>
-                </div>
             </Card>
-        </div>
 
-        <!-- Pagination -->
-        <div v-if="notifications.last_page > 1" class="mt-6 flex items-center justify-center gap-1">
-            <!-- First Page -->
-            <Link v-if="notifications.current_page > 1" href="#">
-            <Button variant="outline" size="icon">
-                <ChevronsLeft class="h-4 w-4" />
-            </Button>
-            </Link>
-
-            <!-- Previous Page -->
-            <Link v-if="notifications.current_page > 1" href="#">
-            <Button variant="outline" size="icon">
-                <ChevronLeft class="h-4 w-4" />
-            </Button>
-            </Link>
-
-            <!-- Page Numbers -->
-            <div class="flex items-center gap-1">
-                <template v-for="page in getPageNumbers" :key="page">
-                    <Link v-if="typeof page === 'number'" href="#">
-                    <Button variant="outline" size="sm" :class="{
-                        'bg-primary text-primary-foreground hover:bg-primary/90': isCurrentPage(page),
-                        'cursor-pointer': !isCurrentPage(page),
-                        'cursor-default': isCurrentPage(page)
-                    }">
-                        {{ page }}
-                    </Button>
-                    </Link>
-                    <span v-else class="px-2">{{ page }}</span>
-                </template>
+            <!-- Pagination -->
+            <div v-if="notifications.last_page > 1" class="flex items-center justify-center gap-2">
+                <Link v-for="page in pageNumbers" :key="page"
+                    :href="route('notifications.index', { page, type: notificationType, status: statusFilter })">
+                <Button variant="outline"
+                    :class="{ 'bg-primary text-primary-foreground': notifications.current_page === page }">
+                    {{ page }}
+                </Button>
+                </Link>
             </div>
-
-            <!-- Next Page -->
-            <Link v-if="notifications.current_page < notifications.last_page" href="#">
-            <Button variant="outline" size="icon">
-                <ChevronRight class="h-4 w-4" />
-            </Button>
-            </Link>
-
-            <!-- Last Page -->
-            <Link v-if="notifications.current_page < notifications.last_page" href="#">
-            <Button variant="outline" size="icon">
-                <ChevronsRight class="h-4 w-4" />
-            </Button>
-            </Link>
         </div>
     </AppLayout>
 </template>
+
+<!-- Add these helper functions at the end of the script -->
+<script lang="ts">
+function getNotificationIcon(type: string) {
+    switch (type) {
+        case 'message': return Mail;
+        case 'info': return Mail;
+        case 'success': return CheckCheck;
+        case 'warning': return AlertCircle;
+        case 'error': return AlertCircle;
+        default: return Bell;
+    }
+}
+
+function getNotificationClass(type: string) {
+    switch (type) {
+        case 'message': return 'text-blue-500';
+        case 'info': return 'text-blue-500';
+        case 'success': return 'text-green-500';
+        case 'warning': return 'text-amber-500';
+        case 'error': return 'text-red-500';
+        default: return 'text-foreground';
+    }
+}
+</script>

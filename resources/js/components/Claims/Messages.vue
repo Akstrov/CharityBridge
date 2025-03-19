@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/components/ui/toast/use-toast';
 import { ChevronLeft } from 'lucide-vue-next';
 
+
 interface Message {
     id: number;
     content: string;
@@ -57,7 +58,10 @@ const isSending = ref(false);
 const scrollToBottom = async () => {
     await nextTick();
     if (messagesContainer.value) {
-        messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+        const viewport = messagesContainer.value.$el.querySelector('.scroll-area-viewport');
+        if (viewport) {
+            viewport.scrollTop = viewport.scrollHeight;
+        }
     }
 };
 
@@ -109,7 +113,7 @@ onMounted(() => {
         </div>
 
         <!-- Chat Container -->
-        <div class="flex-1 container py-4">
+        <div class="flex-1 container py-4 ">
             <div class="bg-card rounded-lg shadow-lg overflow-hidden max-w-3xl mx-auto h-full flex flex-col">
                 <!-- Chat Header -->
                 <div class="border-b p-3 bg-muted/50">
@@ -138,46 +142,41 @@ onMounted(() => {
                 </div>
 
                 <!-- Messages Area -->
-                <ScrollArea ref="messagesContainer" class="flex-1">
-                    <div class="p-3 space-y-2">
-                        <div v-for="message in messages" :key="message.id"
-                             class="flex flex-col"
-                             :class="message.sender.id === page.props.auth.user.id ? 'items-end' : 'items-start'">
-                            <div class="max-w-[85%] rounded-lg px-3 py-2"
-                                 :class="message.sender.id === page.props.auth.user.id
-                                        ? 'bg-primary text-primary-foreground rounded-br-none'
-                                        : 'bg-muted rounded-bl-none'">
-                                <p class="text-sm leading-relaxed">{{ message.content }}</p>
-                                <div class="flex items-center gap-1 text-[10px] mt-1 opacity-70">
-                                    <span>{{ message.sender.name }}</span>
-                                    <span>•</span>
-                                    <span>{{ new Date(message.created_at).toLocaleString() }}</span>
+                <div class="flex-1 overflow-hidden">
+                    <ScrollArea ref="messagesContainer" class="h-[calc(100vh-240px)]">
+                        <div class="p-3 space-y-2">
+                            <div v-for="message in messages" :key="message.id" class="flex flex-col"
+                                :class="message.sender.id === page.props.auth.user.id ? 'items-end' : 'items-start'">
+                                <div class="max-w-[85%] rounded-lg px-3 py-2" :class="message.sender.id === page.props.auth.user.id
+                                    ? 'bg-primary text-primary-foreground rounded-br-none'
+                                    : 'bg-muted rounded-bl-none'">
+                                    <p class="text-sm leading-relaxed">{{ message.content }}</p>
+                                    <div class="flex items-center gap-1 text-[10px] mt-1 opacity-70">
+                                        <span>{{ message.sender.name }}</span>
+                                        <span>•</span>
+                                        <span>{{ new Date(message.created_at).toLocaleString() }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </ScrollArea>
+                    </ScrollArea>
+                </div>
 
                 <!-- Message Input -->
                 <div class="border-t p-3 bg-muted/50">
                     <form @submit.prevent="sendMessage" class="flex gap-2">
-                        <Textarea
-                            v-model="newMessage"
-                            placeholder="Type your message..."
-                            class="flex-1 min-h-[60px] max-h-[120px] resize-none text-sm"
-                            :disabled="isSending"
-                        />
-                        <Button
-                            type="submit"
-                            :disabled="isSending"
-                            class="self-end"
-                            size="sm"
-                        >
+                        <Textarea v-model="newMessage" placeholder="Type your message..."
+                            class="flex-1 min-h-[60px] max-h-[120px] resize-none text-sm" :disabled="isSending" />
+                        <Button type="submit" :disabled="isSending" class="self-end" size="sm">
                             <span v-if="!isSending">Send</span>
                             <span v-else class="flex items-center gap-2">
-                                <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
                                 </svg>
                                 Sending...
                             </span>
@@ -188,3 +187,25 @@ onMounted(() => {
         </div>
     </div>
 </template>
+
+<style scoped>
+/* Custom scrollbar styling */
+:deep(.scroll-area-viewport) {
+    height: 100%;
+}
+
+:deep(.scroll-area-scrollbar) {
+    width: 8px;
+    padding: 2px;
+}
+
+:deep(.scroll-area-scrollbar-thumb) {
+    background-color: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+    transition: background-color 160ms ease-out;
+}
+
+:deep(.scroll-area-scrollbar-thumb:hover) {
+    background-color: hsl(var(--muted-foreground) / 0.5);
+}
+</style>

@@ -1,5 +1,7 @@
 <?php
+
 // filepath: d:\studies\CharityBridge\app\Http\Controllers\NotificationController.php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -21,7 +23,7 @@ class NotificationController extends Controller
         if ($request->has('status') && $request->status !== 'all') {
             if ($request->status === 'read') {
                 $query->whereNotNull('read_at');
-            } else if ($request->status === 'unread') {
+            } elseif ($request->status === 'unread') {
                 $query->whereNull('read_at');
             }
         }
@@ -52,8 +54,7 @@ class NotificationController extends Controller
         if ($notification) {
             $notification->markAsRead();
         }
-
-        return response()->json(['status' => 'success']);
+        return redirect()->back();
     }
 
     public function destroy($id)
